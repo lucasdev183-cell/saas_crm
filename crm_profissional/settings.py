@@ -80,6 +80,10 @@ DATABASES = {
         'PASSWORD': os.getenv('PGPASSWORD', 'xbala'),
         'HOST': os.getenv('PGHOST', 'localhost'),
         'PORT': os.getenv('PGPORT', '5432'),
+        'OPTIONS': {
+            'options': '-c default_transaction_isolation=read committed'
+        },
+        'CONN_MAX_AGE': 60,
     }
 }
 
