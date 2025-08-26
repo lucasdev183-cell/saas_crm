@@ -7,15 +7,19 @@ Desenvolvido para atender diversos nichos de mercado
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Carrega variáveis do arquivo .env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-jy$&@_76%9^%&d(zi1$ndb#he(@gyzjbg4#-5p)domt_wk8bl3'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-jy$&@_76%9^%&d(zi1$ndb#he(@gyzjbg4#-5p)domt_wk8bl3')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
@@ -67,13 +71,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'crm_profissional.wsgi.application'
 
-# Database
+# Database - PostgreSQL
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'bd_crm.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('PGDATABASE', 'db_crm'),
+        'USER': os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': os.getenv('PGPASSWORD', 'xbala'),
+        'HOST': os.getenv('PGHOST', 'localhost'),
+        'PORT': os.getenv('PGPORT', '5432'),
+        'OPTIONS': {
+            'options': '-c default_transaction_isolation=read_committed'
+        }
     }
 }
+
+# Fallback para SQLite se PostgreSQL não estiver disponível
+if os.getenv('USE_SQLITE', 'False').lower() == 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'bd_crm.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -135,3 +155,26 @@ MESSAGE_TAGS = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configurações de logging para PostgreSQL
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'crm_debug.log',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+        },
+    },
+}
