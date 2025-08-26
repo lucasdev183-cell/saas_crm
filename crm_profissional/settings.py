@@ -120,9 +120,9 @@ REST_FRAMEWORK = {
 }
 
 # Configurações de login
-LOGIN_URL = '/autenticacao/entrar/'
+LOGIN_URL = '/entrar/'
 LOGIN_REDIRECT_URL = '/painel/'
-LOGOUT_REDIRECT_URL = '/autenticacao/entrar/'
+LOGOUT_REDIRECT_URL = '/entrar/'
 
 # Configurações de mensagens
 from django.contrib.messages import constants as mensagens

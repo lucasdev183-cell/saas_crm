@@ -129,11 +129,11 @@
                         <div class="usuario-avatar">
                             {{ user.first_name.0|upper|default:user.username.0|upper }}
                         </div>
-                        <a href="{% url 'admin:logout' %}" class="btn btn-secundario btn-pequeno">
+                        <a href="{% url 'logout' %}" class="btn btn-secundario btn-pequeno">
                             <i class="fas fa-sign-out-alt"></i> Sair
                         </a>
                     {% else %}
-                        <a href="{% url 'admin:login' %}" class="btn btn-primario btn-pequeno">
+                        <a href="{% url 'login' %}" class="btn btn-primario btn-pequeno">
                             <i class="fas fa-sign-in-alt"></i> Entrar
                         </a>
                     {% endif %}
