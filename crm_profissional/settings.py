@@ -81,7 +81,7 @@ DATABASES = {
         'HOST': os.getenv('PGHOST', 'localhost'),
         'PORT': os.getenv('PGPORT', '5432'),
         'OPTIONS': {
-            'options': '-c default_transaction_isolation=read_committed'
+            'options': "-c default_transaction_isolation='read committed'"
         }
     }
 }
