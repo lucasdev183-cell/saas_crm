@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block titulo %}Painel Principal - CRM Profissional{% endblock %}
+{% block titulo_pagina %}Painel Principal{% endblock %}
+
+{% block conteudo %}
+<!-- Cards de Métricas Principais -->
+<div class="row mb-20">
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="metrica-numero">{{ total_clientes }}</div>
+            <div class="metrica-label">Total de Clientes</div>
+        </div>
+    </div>
+    
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="metrica-numero">{{ vendas_mes }}</div>
+            <div class="metrica-label">Vendas este Mês</div>
+        </div>
+    </div>
+    
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="metrica-numero" id="faturamento-mes">R$ {{ faturamento_mes|floatformat:2 }}</div>
+            <div class="metrica-label">
+                Faturamento do Mês
+                {% if crescimento_faturamento != 0 %}
+                    <small class="{% if crescimento_faturamento > 0 %}badge-sucesso{% else %}badge-erro{% endif %} badge">
+                        {% if crescimento_faturamento > 0 %}+{% endif %}{{ crescimento_faturamento }}%
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="metrica-numero">{{ oportunidades_abertas }}</div>
+            <div class="metrica-label">Oportunidades Abertas</div>
+        </div>
+    </div>
+</div>
+
+<!-- Segunda linha de métricas -->
+<div class="row mb-20">
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <div class="metrica-numero">{{ clientes_ativos }}</div>
+            <div class="metrica-label">Clientes Ativos</div>
+        </div>
+    </div>
+    
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="metrica-numero">{{ clientes_potenciais }}</div>
+            <div class="metrica-label">Clientes Potenciais</div>
+        </div>
+    </div>
+    
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-funnel-dollar"></i>
+            </div>
+            <div class="metrica-numero">R$ {{ valor_pipeline|floatformat:2 }}</div>
+            <div class="metrica-label">Valor no Pipeline</div>
+        </div>
+    </div>
+    
+    <div class="col-3">
+        <div class="card metrica-card">
+            <div class="metrica-icone">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="metrica-numero">{{ tarefas_pendentes }}</div>
+            <div class="metrica-label">Tarefas Pendentes</div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas importantes -->
+{% if tarefas_atrasadas or tarefas_vencendo_hoje %}
+<div class="row mb-20">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Alertas Importantes
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if tarefas_atrasadas %}
+                    <div class="alert alert-erro mb-20">
+                        <i class="fas fa-clock"></i>
+                        <strong>{{ tarefas_atrasadas }} tarefa{{ tarefas_atrasadas|pluralize }} atrasada{{ tarefas_atrasadas|pluralize }}</strong>
+                        <a href="{% url 'tarefas:minhas' %}" class="btn btn-pequeno btn-erro">Ver Tarefas</a>
+                    </div>
+                {% endif %}
+                
+                {% if tarefas_vencendo_hoje %}
+                    <div class="alert alert-aviso">
+                        <i class="fas fa-calendar-day"></i>
+                        <strong>{{ tarefas_vencendo_hoje }} tarefa{{ tarefas_vencendo_hoje|pluralize }} vence{{ tarefas_vencendo_hoje|pluralize:"m," }} hoje</strong>
+                        <a href="{% url 'tarefas:minhas' %}" class="btn btn-pequeno btn-aviso">Ver Tarefas</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Gráficos e informações detalhadas -->
+<div class="row">
+    <!-- Gráfico de vendas -->
+    <div class="col-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-area"></i>
+                    Vendas dos Últimos 7 Dias
+                </h3>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoVendas" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Atividades recentes -->
+    <div class="col-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-history"></i>
+                    Últimas Atividades
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if ultimas_atividades %}
+                    <div class="lista-atividades">
+                        {% for atividade in ultimas_atividades %}
+                            <div class="item-atividade">
+                                <div class="atividade-icone">
+                                    {% if atividade.tipo == 'ligacao' %}
+                                        <i class="fas fa-phone"></i>
+                                    {% elif atividade.tipo == 'email_enviado' %}
+                                        <i class="fas fa-envelope"></i>
+                                    {% elif atividade.tipo == 'reuniao' %}
+                                        <i class="fas fa-users"></i>
+                                    {% else %}
+                                        <i class="fas fa-clipboard"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="atividade-info">
+                                    <div class="atividade-titulo">{{ atividade.titulo }}</div>
+                                    <div class="atividade-cliente">
+                                        {% if atividade.cliente %}
+                                            {{ atividade.cliente.nome_completo }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="atividade-data">{{ atividade.data_atividade|timesince }} atrás</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="texto-centro">Nenhuma atividade recente</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top clientes e produtos com estoque baixo -->
+<div class="row mt-20">
+    <!-- Top clientes do mês -->
+    <div class="col-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-crown"></i>
+                    Top Clientes do Mês
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if top_clientes %}
+                    <table class="tabela">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th class="texto-direita">Valor Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cliente in top_clientes %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'clientes:detalhe' cliente.pk %}">
+                                            {{ cliente.nome_completo }}
+                                        </a>
+                                    </td>
+                                    <td class="texto-direita">
+                                        R$ {{ cliente.total_compras|floatformat:2 }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="texto-centro">Nenhuma venda registrada este mês</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Produtos com estoque baixo -->
+    <div class="col-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Produtos com Estoque Baixo
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if produtos_estoque_baixo %}
+                    <table class="tabela">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th class="texto-centro">Estoque</th>
+                                <th class="texto-centro">Mínimo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos_estoque_baixo %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'vendas:produtos_detalhe' produto.pk %}">
+                                            {{ produto.nome }}
+                                        </a>
+                                    </td>
+                                    <td class="texto-centro">
+                                        <span class="badge badge-aviso">{{ produto.estoque_atual }}</span>
+                                    </td>
+                                    <td class="texto-centro">{{ produto.estoque_minimo }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="texto-centro">Todos os produtos com estoque adequado</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_extra %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuração do gráfico de vendas
+    const ctx = document.getElementById('graficoVendas').getContext('2d');
+    const graficoVendas = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ grafico_vendas_labels|safe }},
+            datasets: [{
+                label: 'Vendas (R$)',
+                data: {{ grafico_vendas_data|safe }},
+                borderColor: '#A3B3A3',
+                backgroundColor: 'rgba(163, 179, 163, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#A3B3A3',
+                pointBorderColor: '#8A9B8A',
+                pointBorderWidth: 2,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    },
+                    grid: {
+                        color: '#E0E8E0'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: '#E0E8E0'
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverRadius: 8
+                }
+            }
+        }
+    });
+    
+    // Formatar valores monetários
+    document.addEventListener('DOMContentLoaded', function() {
+        const elementoFaturamento = document.getElementById('faturamento-mes');
+        if (elementoFaturamento) {
+            const valor = parseFloat(elementoFaturamento.textContent.replace('R$ ', '').replace(',', '.'));
+            elementoFaturamento.textContent = CRMUtils.formatarMoeda(valor);
+        }
+    });
+});
+</script>
+
+<style>
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-erro {
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid var(--cor-erro);
+    color: var(--cor-erro);
+}
+
+.alert-aviso {
+    background-color: rgba(255, 152, 0, 0.1);
+    border: 1px solid var(--cor-aviso);
+    color: var(--cor-aviso);
+}
+
+.lista-atividades {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.item-atividade {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.item-atividade:last-child {
+    border-bottom: none;
+}
+
+.atividade-icone {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: var(--cor-primaria);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.atividade-info {
+    flex: 1;
+}
+
+.atividade-titulo {
+    font-weight: 600;
+    color: var(--cor-texto);
+    margin-bottom: 2px;
+}
+
+.atividade-cliente {
+    font-size: 12px;
+    color: var(--cor-texto-claro);
+    margin-bottom: 2px;
+}
+
+.atividade-data {
+    font-size: 11px;
+    color: var(--cor-texto-claro);
+}
+</style>
+{% endblock %}

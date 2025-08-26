@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Produtos - CRM Profissional{% endblock %}
+{% block titulo_pagina %}Produtos{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-between align-center mb-20">
+    <h2>Catálogo de Produtos</h2>
+    <a href="{% url 'vendas:produtos_adicionar' %}" class="btn btn-primario">
+        <i class="fas fa-plus"></i> Novo Produto
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if produtos %}
+            <table class="tabela">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Código</th>
+                        <th>Categoria</th>
+                        <th>Preço Unitário</th>
+                        <th>Estoque</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td>{{ produto.nome }}</td>
+                        <td>{{ produto.codigo }}</td>
+                        <td>{{ produto.categoria|default:"-" }}</td>
+                        <td>R$ {{ produto.preco_unitario|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge {% if produto.precisa_reposicao %}badge-aviso{% else %}badge-sucesso{% endif %}">
+                                {{ produto.estoque_atual }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{% if produto.ativo %}sucesso{% else %}secundario{% endif %}">
+                                {% if produto.ativo %}Ativo{% else %}Inativo{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'vendas:produtos_detalhe' produto.pk %}" class="btn btn-pequeno btn-primario">Ver</a>
+                            <a href="{% url 'vendas:produtos_editar' produto.pk %}" class="btn btn-pequeno btn-secundario">Editar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="texto-centro">Nenhum produto cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

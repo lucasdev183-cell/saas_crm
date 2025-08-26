@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Oportunidades - CRM Profissional{% endblock %}
+{% block titulo_pagina %}Oportunidades{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-between align-center mb-20">
+    <h2>Oportunidades de Venda</h2>
+    <a href="{% url 'vendas:oportunidades_adicionar' %}" class="btn btn-primario">
+        <i class="fas fa-plus"></i> Nova Oportunidade
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if oportunidades %}
+            <table class="tabela">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Cliente</th>
+                        <th>Valor Estimado</th>
+                        <th>Probabilidade</th>
+                        <th>Status</th>
+                        <th>Fase</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for oportunidade in oportunidades %}
+                    <tr>
+                        <td>{{ oportunidade.titulo }}</td>
+                        <td>{{ oportunidade.cliente.nome_completo }}</td>
+                        <td>R$ {{ oportunidade.valor_estimado|floatformat:2 }}</td>
+                        <td>{{ oportunidade.probabilidade }}%</td>
+                        <td>
+                            <span class="badge badge-{% if oportunidade.status == 'fechada_ganha' %}sucesso{% elif oportunidade.status == 'fechada_perdida' %}erro{% else %}info{% endif %}">
+                                {{ oportunidade.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ oportunidade.get_fase_funil_display }}</td>
+                        <td>
+                            <a href="{% url 'vendas:oportunidade_detalhe' oportunidade.pk %}" class="btn btn-pequeno btn-primario">Ver</a>
+                            <a href="{% url 'vendas:oportunidades_editar' oportunidade.pk %}" class="btn btn-pequeno btn-secundario">Editar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="texto-centro">Nenhuma oportunidade cadastrada ainda.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Tarefas - CRM Profissional{% endblock %}
+{% block titulo_pagina %}Tarefas{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-between align-center mb-20">
+    <h2>Tarefas</h2>
+    <a href="{% url 'tarefas:adicionar' %}" class="btn btn-primario">
+        <i class="fas fa-plus"></i> Nova Tarefa
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if tarefas %}
+            <table class="tabela">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Prioridade</th>
+                        <th>Status</th>
+                        <th>Vencimento</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tarefa in tarefas %}
+                    <tr>
+                        <td>{{ tarefa.titulo }}</td>
+                        <td>{{ tarefa.get_tipo_display }}</td>
+                        <td>
+                            <span class="badge badge-{% if tarefa.prioridade == 'urgente' %}erro{% elif tarefa.prioridade == 'alta' %}aviso{% else %}info{% endif %}">
+                                {{ tarefa.get_prioridade_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{% if tarefa.status == 'concluida' %}sucesso{% elif tarefa.atrasada %}erro{% else %}info{% endif %}">
+                                {{ tarefa.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ tarefa.data_vencimento|date:"d/m/Y H:i" }}</td>
+                        <td>{{ tarefa.responsavel.get_full_name|default:tarefa.responsavel.username }}</td>
+                        <td>
+                            <a href="{% url 'tarefas:detalhe' tarefa.pk %}" class="btn btn-pequeno btn-primario">Ver</a>
+                            {% if tarefa.status != 'concluida' %}
+                                <a href="{% url 'tarefas:concluir' tarefa.pk %}" class="btn btn-pequeno btn-sucesso">Concluir</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="texto-centro">Nenhuma tarefa cadastrada ainda.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
