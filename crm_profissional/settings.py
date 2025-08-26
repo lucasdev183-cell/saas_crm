@@ -80,9 +80,7 @@ DATABASES = {
         'PASSWORD': os.getenv('PGPASSWORD', 'xbala'),
         'HOST': os.getenv('PGHOST', 'localhost'),
         'PORT': os.getenv('PGPORT', '5432'),
-        'OPTIONS': {
-            'options': '-c default_transaction_isolation=read committed'
-        },
+        # Removed invalid isolation options that caused ImproperlyConfigured in psycopg
         'CONN_MAX_AGE': 60,
     }
 }
