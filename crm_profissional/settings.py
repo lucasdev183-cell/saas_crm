@@ -80,9 +80,6 @@ DATABASES = {
         'PASSWORD': os.getenv('PGPASSWORD', 'xbala'),
         'HOST': os.getenv('PGHOST', 'localhost'),
         'PORT': os.getenv('PGPORT', '5432'),
-        'OPTIONS': {
-            'isolation_level': 'read committed'
-        }
     }
 }
 
@@ -136,6 +133,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20
 }
 
